@@ -1,0 +1,154 @@
+---
+title: MDX 代码块的高阶使用指南
+published: 2026-04-19
+description: 探索 MDX 中代码块的多种用法，包括语法高亮、行高亮、差异对比、折叠区块以及行号显示，提升技术博客的阅读体验。
+image: https://images.xxapi.cn/images/acg/pc/o5AuJ9rwi0NSbMcE6MhnNVdz.jpg
+tags: [MDX, Expressive Code, 教程]
+category: 技术
+---
+
+# 探索 MDX 的代码块魅力
+
+在技术博客中，代码块是我们展示逻辑和分享知识的核心元素。本博客基于 **Expressive Code** 引擎渲染代码块，比传统的 Shiki / Prism 提供了更丰富的功能。下面逐一介绍各种用法。
+
+## 1. 基础语法高亮
+
+指定语言标识符即可获得语法高亮：
+
+```typescript
+interface Post {
+  slug: string;
+  title: string;
+  published: Date;
+  tags: string[];
+}
+
+const formatDate = (date: Date): string =>
+  date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+```
+
+```css
+.card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+```
+
+## 2. 带标题的代码块
+
+通过 `title` 属性显示文件路径，读者一眼便知代码来源：
+
+```javascript title="src/config.js"
+export default {
+  title: 'My Awesome Blog',
+  author: 'Developer',
+  features: {
+    darkMode: true,
+    comments: true,
+  },
+}
+```
+
+## 3. 行高亮
+
+使用 `// [!code highlight]` 注释精确标注需要关注的行：
+
+```typescript title="src/utils/auth.ts"
+function login(username: string, password: string) {
+  const user = findUser(username);
+  if (!user) return null;
+
+  const isValid = verifyPassword(password, user.hash); // [!code highlight]
+  if (!isValid) return null;
+
+  return generateToken(user); // [!code highlight]
+}
+```
+
+## 4. 差异对比
+
+使用 `// [!code --]` 和 `// [!code ++]` 展示重构前后的对比：
+
+```javascript title="src/utils/total.js"
+function calculateTotal(items) {
+  let total = 0; // [!code --]
+  for (let i = 0; i < items.length; i++) { // [!code --]
+    total += items[i].price; // [!code --]
+  } // [!code --]
+  return total; // [!code --]
+  return items.reduce((sum, item) => sum + item.price, 0); // [!code ++]
+}
+```
+
+## 5. 折叠区块
+
+使用 `// [!code collapse:N]` 将指定行数的代码默认折叠，读者可点击展开：
+
+```typescript title="src/utils/posts.ts"
+import fs from 'node:fs' // [!code collapse:8]
+import path from 'node:path'
+import matter from 'gray-matter'
+import type { Post } from './types'
+
+const POSTS_DIR = path.join(process.cwd(), 'src/content/posts')
+
+export function getAllPosts(): Post[] {
+  return fs
+    .readdirSync(POSTS_DIR)
+    .filter((f) => f.endsWith('.mdx') || f.endsWith('.md'))
+    .map((file) => {
+      const raw = fs.readFileSync(path.join(POSTS_DIR, file), 'utf-8')
+      const { data } = matter(raw)
+      return { slug: file.replace(/\.mdx?$/, ''), ...data } as Post
+    })
+    .sort((a, b) => b.published.getTime() - a.published.getTime())
+}
+```
+
+## 6. 显示行号
+
+在代码块 meta 中加入 `showLineNumbers`，为长代码块增加行号，方便引用：
+
+```python showLineNumbers title="scripts/deploy.py"
+import subprocess
+import sys
+
+def run(cmd: str) -> None:
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"Error: {result.stderr}", file=sys.stderr)
+        sys.exit(1)
+    print(result.stdout)
+
+if __name__ == "__main__":
+    run("git pull origin main")
+    run("pnpm build")
+    run("wrangler pages deploy ./dist")
+    print("✅ Deployment complete!")
+```
+
+## 7. 终端命令
+
+使用 `bash` 展示终端操作：
+
+```bash
+# 克隆项目仓库
+git clone https://github.com/saicaca/fuwari.git
+cd fuwari
+
+# 安装依赖并启动开发服务器
+pnpm install
+pnpm dev
+```
+
+---
+
+掌握以上 Expressive Code 技巧，你的技术博客代码块将更加专业、易读，让每一篇文章都更具表达力！

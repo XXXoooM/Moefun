@@ -1,0 +1,1 @@
+这是 Moefun 个人博客，基于 [Fuwari](https://github.com/saicaca/fuwari) 主题修改，使用 [Astro 6](https://astro.build) 构建。

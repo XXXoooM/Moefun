@@ -1,0 +1,20 @@
+---
+import type { MarkdownHeading } from "astro";
+import SiteStats from "./SiteStats.astro";
+import WeatherWidget from "./WeatherWidget.astro";
+import CalendarWidget from "./CalendarWidget.astro";
+
+interface Props {
+	class?: string;
+	headings?: MarkdownHeading[];
+}
+
+const className = Astro.props.class;
+---
+<div id="right-sidebar" class:list={[className, "w-full"]}>
+    <div id="right-sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 top-4 sticky top-4">
+        <SiteStats class="onload-animation" style="animation-delay: 100ms"></SiteStats>
+        <WeatherWidget class="onload-animation" style="animation-delay: 150ms"></WeatherWidget>
+        <CalendarWidget class="onload-animation" style="animation-delay: 200ms"></CalendarWidget>
+    </div>
+</div>

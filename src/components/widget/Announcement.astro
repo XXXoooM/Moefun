@@ -1,0 +1,90 @@
+---
+import WidgetLayout from "./WidgetLayout.astro";
+import { Icon } from "astro-icon/components";
+
+interface Props {
+	class?: string;
+	style?: string;
+}
+
+const { class: className, style } = Astro.props;
+
+import { siteConfig } from "../../config";
+
+const announcement = siteConfig.announcement || {
+    enable: false,
+    title: "",
+    content: "",
+    icon: "",
+    color: "",
+    link: "",
+};
+---
+
+{announcement.enable && (
+<WidgetLayout name="公告" id="announcement" class={className} style={style}>
+    <div class="relative w-full p-1 -mt-1">
+        <div class="group relative p-4 rounded-xl bg-gradient-to-br from-black/5 to-transparent dark:from-white/5 dark:to-transparent border border-black/5 dark:border-white/5 overflow-hidden">
+            <!-- 关闭按钮 (常驻显示，带背景色) -->
+            <button id="announcement-close" class="absolute top-2 right-2 flex items-center justify-center w-6 h-6 rounded-full bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 text-black/50 hover:text-black/80 dark:text-white/50 dark:hover:text-white/80 transition-all z-20 cursor-pointer" aria-label="关闭公告">
+                <Icon name="material-symbols:close-rounded" class="text-sm" />
+            </button>
+            <!-- 装饰性背景图标 -->
+            <Icon 
+                name={announcement.icon} 
+                class="absolute -right-4 -bottom-4 text-8xl opacity-5 dark:opacity-10 pointer-events-none rotate-12"
+            />
+            
+            <div class="flex items-start gap-3 relative z-10">
+                <div class="flex flex-col gap-2 pt-1">
+                    <p class="text-sm leading-relaxed text-neutral-600 dark:text-neutral-400 font-medium">
+                        {announcement.content}
+                    </p>
+                    {announcement.link && (
+                        <a href={announcement.link} class="text-xs font-bold w-fit text-[var(--primary)] hover:underline underline-offset-4 mt-1 flex items-center transition-all">
+                            了解更多
+                            <Icon name="material-symbols:arrow-right-alt-rounded" class="ml-1 text-base translate-y-[0.5px]" />
+                        </a>
+                    )}
+                </div>
+            </div>
+        </div>
+    </div>
+</WidgetLayout>
+)}
+
+<style>
+    @keyframes wiggle {
+        0%, 100% { transform: rotate(-10deg); }
+        50% { transform: rotate(10deg); }
+    }
+    .animate-wiggle {
+        animation: wiggle 2.5s ease-in-out infinite;
+        transform-origin: 50% 100%;
+    }
+</style>
+
+<script is:inline>
+    function setupAnnouncement() {
+        const closeBtn = document.getElementById('announcement-close');
+        // 获取整个 WidgetLayout 容器
+        const announcementWidget = document.querySelector('widget-layout[data-id="announcement"]');
+        
+        if (!announcementWidget) return;
+
+        // 如果用户在这个会话中已经关闭过，则直接隐藏
+        if (sessionStorage.getItem('announcement-closed') === 'true') {
+            announcementWidget.style.display = 'none';
+        }
+
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                announcementWidget.style.display = 'none';
+                sessionStorage.setItem('announcement-closed', 'true');
+            };
+        }
+    }
+
+    setupAnnouncement();
+    document.addEventListener("swup:contentReplaced", setupAnnouncement);
+</script>

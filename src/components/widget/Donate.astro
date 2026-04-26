@@ -1,0 +1,65 @@
+---
+import { Icon } from "astro-icon/components";
+import wechatPayImg from "../../assets/images/wechat-pay.jpg";
+import alipayImg from "../../assets/images/alipay.jpg";
+
+interface Props {
+  class?: string;
+  style?: string;
+}
+
+const { class: className, style } = Astro.props;
+
+// 可以将这些配置抽取到 config 中
+const sponsorConfig = {
+  enable: true,
+  wechat: wechatPayImg.src,
+  alipay: alipayImg.src,
+};
+
+// SVG Placeholder 避免图片缺失时报错
+const placeholder = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23f1f5f9'/><text x='50' y='50' font-family='sans-serif' font-size='12' font-weight='600' fill='%2394a3b8' text-anchor='middle' dominant-baseline='middle'>请配置收款码</text></svg>`;
+---
+
+{sponsorConfig.enable && (
+<div class={`flex flex-col items-center justify-center space-y-4 my-8 onload-animation ${className || ''}`} style={style}>
+  <div class="relative group">
+    <!-- 触发按钮 -->
+    <button class="relative z-10 flex items-center justify-center gap-2 px-6 py-2.5 rounded-full font-bold text-white bg-rose-400 hover:bg-rose-500 shadow-md shadow-rose-400/30 transition-all hover:-translate-y-0.5 active:scale-95 text-[0.9rem] outline-none">
+      <Icon name="material-symbols:favorite-rounded" class="text-lg animate-pulse" />
+      <span>赞赏作者</span>
+    </button>
+
+    <!-- 弹出的二维码面板 (Hover 触发) -->
+    <!-- 由于可能会因为间隙丢失 hover 状态，添加 pb-4 补全触控区域 -->
+    <div class="absolute bottom-full pb-3 left-1/2 -translate-x-1/2 w-max scale-[0.95] opacity-0 invisible group-hover:scale-100 group-hover:opacity-100 group-hover:visible transition-all duration-300 origin-bottom z-20">
+      <div class="flex gap-4 p-4 rounded-2xl bg-white dark:bg-[#1f2228] shadow-xl border border-black/5 dark:border-white/10 relative">
+        <!-- 微信支付 -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-28 h-28 p-1.5 rounded-xl border-2 border-emerald-400/30 bg-white">
+            <img src={sponsorConfig.wechat} alt="WeChat Pay" class="w-full h-full object-cover rounded-lg" onerror={`this.src="${placeholder}"`} />
+          </div>
+          <span class="text-[11px] font-bold text-emerald-500 flex items-center gap-1">
+            <Icon name="fa6-brands:weixin" class="text-sm" /> 微信支付
+          </span>
+        </div>
+        
+        <!-- 支付宝 -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-28 h-28 p-1.5 rounded-xl border-2 border-blue-400/30 bg-white">
+            <img src={sponsorConfig.alipay} alt="Alipay" class="w-full h-full object-cover rounded-lg" onerror={`this.src="${placeholder}"`} />
+          </div>
+          <span class="text-[11px] font-bold text-blue-500 flex items-center gap-1">
+            <Icon name="fa6-brands:alipay" class="text-sm" /> 支付宝
+          </span>
+        </div>
+        
+        <!-- 小箭头 -->
+        <div class="absolute -bottom-[5px] left-1/2 -translate-x-1/2 w-[10px] h-[10px] bg-white dark:bg-[#1f2228] border-b border-r border-black/5 dark:border-white/10 rotate-45 shadow-[2px_2px_2px_rgba(0,0,0,0.02)]"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="text-[0.75rem] text-neutral-400 dark:text-neutral-500 italic">如果觉得文章对你有帮助，欢迎请我喝杯咖啡 ☕</div>
+</div>
+)}

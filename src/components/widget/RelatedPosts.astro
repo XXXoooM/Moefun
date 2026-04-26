@@ -1,0 +1,85 @@
+---
+import { getSortedPosts } from "@utils/content-utils";
+import { getDir, getPostUrlBySlug } from "@utils/url-utils";
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  currentSlug: string;
+  currentTags: string[];
+  currentCategory: string | null;
+  maxCount?: number;
+}
+
+const { currentSlug, currentTags = [], currentCategory, maxCount = 3 } = Astro.props;
+
+const allPosts = await getSortedPosts();
+
+// 排除当前文章
+const otherPosts = allPosts.filter(post => post.id !== currentSlug);
+
+// 计算相关性分数
+let relatedPostsInfo = otherPosts.map(post => {
+  let score = 0;
+  
+  if (post.data.category && currentCategory && post.data.category === currentCategory) {
+    score += 2;
+  }
+  
+  const postTags = post.data.tags || [];
+  for (const tag of currentTags) {
+    if (postTags.includes(tag)) {
+      score += 1;
+    }
+  }
+  
+  return { post, score };
+});
+
+// 筛选有相关性的文章并按分数和时间排序
+let relatedPosts = relatedPostsInfo
+  .filter(item => item.score > 0)
+  .sort((a, b) => b.score - a.score || new Date(b.post.data.published).getTime() - new Date(a.post.data.published).getTime())
+  .slice(0, maxCount)
+  .map(item => item.post);
+
+// 如果相关文章不够，用最新的文章补充
+if (relatedPosts.length < maxCount) {
+  const existingIds = new Set(relatedPosts.map(p => p.id));
+  const fallbackPosts = otherPosts
+    .filter(p => !existingIds.has(p.id))
+    .sort((a, b) => new Date(b.data.published).getTime() - new Date(a.data.published).getTime())
+    .slice(0, maxCount - relatedPosts.length);
+  
+  relatedPosts = [...relatedPosts, ...fallbackPosts];
+}
+---
+
+{relatedPosts.length > 0 && (
+<div class="mt-8 mb-4 p-5 md:p-6 rounded-[var(--radius-large)] bg-[var(--card-bg)] transition-colors onload-animation border border-black/5 dark:border-white/5">
+  <div class="flex items-center gap-3 mb-4 text-neutral-800 dark:text-neutral-200 font-bold text-lg">
+    <Icon name="material-symbols:recommend-outline" class="text-[var(--primary)] text-2xl" />
+    <span>相关推荐</span>
+  </div>
+  
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {relatedPosts.map((post) => (
+      <a href={getPostUrlBySlug(post.id)} class="flex flex-col justify-between gap-2 p-4 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-[var(--primary)]/10 dark:hover:bg-[var(--primary)]/10 transition-colors group">
+        <div>
+          <h3 class="font-bold text-neutral-800 dark:text-neutral-200 group-hover:text-[var(--primary)] transition-colors line-clamp-2 text-[0.95rem] leading-snug mb-1.5">
+            {post.data.title}
+          </h3>
+          {post.data.description && (
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed">
+              {post.data.description}
+            </p>
+          )}
+        </div>
+        <div class="flex items-center gap-2 text-[0.7rem] text-neutral-400 dark:text-neutral-500 mt-2">
+            <Icon name="material-symbols:calendar-today-outline" />
+            <span>{new Date(post.data.published).toISOString().split('T')[0]}</span>
+        </div>
+      </a>
+    ))}
+  </div>
+</div>
+)}

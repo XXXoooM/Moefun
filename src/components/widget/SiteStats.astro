@@ -1,0 +1,276 @@
+---
+import { Icon } from "astro-icon/components";
+import WidgetLayout from "./WidgetLayout.astro";
+import {
+	getCategoryList,
+	getSortedPosts,
+	getTagList,
+} from "@utils/content-utils";
+
+interface Props {
+	class?: string;
+	style?: string;
+}
+
+const { class: className, style } = Astro.props;
+
+// 站点开始日期（可在 config.ts 中自定义）
+const siteStartDate = "2026-04-12";
+
+// 获取所有文章数据
+const posts = await getSortedPosts();
+const categories = await getCategoryList();
+const tags = await getTagList();
+
+// 计算总字数
+let totalWords = 0;
+for (const post of posts) {
+	if (post.body) {
+		// 移除代码块和内联代码后计算字数
+		const text = post.body
+			.replace(/```[\s\S]*?```/g, "") // 移除代码块
+			.replace(/`[^`]*`/g, "") // 移除内联代码
+			.replace(/\s+/g, " ") // 合并空白
+			.trim();
+
+		// 分别计算中文字符和英文单词
+		const chineseChars = text.match(/[\u4e00-\u9fa5]/g) || [];
+		const englishWords = text.match(/[a-zA-Z]+/g) || [];
+
+		totalWords += chineseChars.length + englishWords.length;
+	}
+}
+
+// 格式化数字（添加千位分隔符）
+function formatNumber(num: number): string {
+	if (num >= 10000) {
+		return (num / 10000).toFixed(1) + "万";
+	}
+	return num.toLocaleString();
+}
+
+// 获取最新文章日期
+const latestPost = posts.length > 0 ? posts[0] : null;
+const lastPostDate = latestPost
+	? new Date(latestPost.data.published).toISOString()
+	: null;
+
+const stats = [
+	{
+		icon: "material-symbols:article-outline",
+		label: "文章",
+		value: String(posts.length),
+		color: "text-blue-500",
+	},
+	{
+		icon: "material-symbols:folder-outline",
+		label: "分类",
+		value: String(categories.length),
+		color: "text-amber-500",
+	},
+	{
+		icon: "material-symbols:label-outline",
+		label: "标签",
+		value: String(tags.length),
+		color: "text-emerald-500",
+	},
+	{
+		icon: "material-symbols:text-ad-outline-rounded",
+		label: "总字数",
+		value: formatNumber(totalWords),
+		color: "text-purple-500",
+	},
+];
+---
+
+<WidgetLayout name="站点统计" id="site-stats" class={className} style={style}>
+  <div class="site-stats-grid">
+    {stats.map((stat) => (
+      <div class="stat-item">
+        <div class:list={["stat-icon", stat.color]}>
+          <Icon name={stat.icon} />
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{stat.value}</span>
+          <span class="stat-label">{stat.label}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="stat-divider"></div>
+
+  <div class="stat-timeline">
+    <div class="timeline-item">
+      <div class="timeline-icon text-rose-500">
+        <Icon name="material-symbols:calendar-clock-outline" />
+      </div>
+      <div class="timeline-info">
+        <span class="stat-label">运行天数</span>
+        <span class="stat-value" data-stat-id="running-days">-</span>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-icon text-cyan-500">
+        <Icon name="material-symbols:update" />
+      </div>
+      <div class="timeline-info">
+        <span class="stat-label">最近更新</span>
+        <span class="stat-value" data-stat-id="last-update">-</span>
+      </div>
+    </div>
+  </div>
+</WidgetLayout>
+
+<style>
+  .site-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0 0.25rem;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+  }
+
+  .stat-item:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  :global(.dark) .stat-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .stat-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    opacity: 0.85;
+  }
+
+  .stat-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .stat-value {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  :global(.dark) .stat-value {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    color: rgba(0, 0, 0, 0.45);
+    font-weight: 500;
+  }
+
+  :global(.dark) .stat-label {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .stat-divider {
+    height: 1px;
+    margin: 0.5rem 0.75rem;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(0, 0, 0, 0.08),
+      transparent
+    );
+  }
+
+  :global(.dark) .stat-divider {
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, 0.08),
+      transparent
+    );
+  }
+
+  .stat-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0 0.25rem;
+  }
+
+  .timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.625rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+  }
+
+  .timeline-item:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  :global(.dark) .timeline-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .timeline-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    opacity: 0.85;
+  }
+
+  .timeline-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+  }
+</style>
+
+<script is:inline define:vars={{ siteStartDate, lastPostDate }}>
+  function updateSiteStats() {
+    const today = new Date();
+
+    // 更新运行天数
+    const startDate = new Date(siteStartDate);
+    const diffTime = Math.abs(today.getTime() - startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    const runningDaysEls = document.querySelectorAll('[data-stat-id="running-days"]');
+    runningDaysEls.forEach((el) => {
+      el.textContent = diffDays + " 天";
+    });
+
+    // 更新最后活动时间
+    if (lastPostDate) {
+      const lastPost = new Date(lastPostDate);
+      const timeSince = Math.abs(today.getTime() - lastPost.getTime());
+      const daysSince = Math.floor(timeSince / (1000 * 60 * 60 * 24));
+
+      const lastUpdateEls = document.querySelectorAll('[data-stat-id="last-update"]');
+      lastUpdateEls.forEach((el) => {
+        if (daysSince === 0) {
+          el.textContent = "今天";
+        } else {
+          el.textContent = daysSince + " 天前";
+        }
+      });
+    }
+  }
+
+  updateSiteStats();
+
+  document.addEventListener("swup:contentReplaced", () => {
+    setTimeout(updateSiteStats, 100);
+  });
+</script>

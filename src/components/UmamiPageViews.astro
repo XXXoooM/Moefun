@@ -1,0 +1,90 @@
+---
+import { umamiStatsConfig } from "@/config";
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+
+// If stats are disabled, don't render
+if (!umamiStatsConfig.enable) {
+  return null;
+}
+---
+
+<div
+  class:list={["umami-stats-container transition flex flex-wrap justify-center gap-4 text-50 text-sm text-center mb-4 opacity-0", className]}
+  id="umami-stats-container"
+  data-api-url={umamiStatsConfig.apiUrl}
+>
+  <div class="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-lg border border-black/5 dark:border-white/10 backdrop-blur-md">
+    <Icon name="material-symbols:person-outline" class="text-[1.1rem] text-green-500" />
+    <span>当前在线: <span class="stat-online font-bold text-[var(--primary)]">...</span></span>
+  </div>
+  <div class="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-lg border border-black/5 dark:border-white/10 backdrop-blur-md">
+    <Icon name="material-symbols:today-outline" class="text-[1.1rem] text-blue-500" />
+    <span>今日访问: <span class="stat-today font-bold text-[var(--primary)]">...</span></span>
+  </div>
+  <div class="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-lg border border-black/5 dark:border-white/10 backdrop-blur-md">
+    <Icon name="material-symbols:calendar-month-outline" class="text-[1.1rem] text-purple-500" />
+    <span>本月累计: <span class="stat-month font-bold text-[var(--primary)]">...</span></span>
+  </div>
+</div>
+
+<script>
+  import { umamiStatsConfig } from "@/config";
+
+  function formatNumber(num: number): string {
+    if (num >= 10000) return (num / 10000).toFixed(1) + "w";
+    if (num >= 1000) return (num / 1000).toFixed(1) + "k";
+    return num.toString();
+  }
+
+  async function fetchUmamiStats() {
+    if (!umamiStatsConfig.enable) return;
+
+    const container = document.getElementById("umami-stats-container");
+    if (!container) return;
+
+    const apiUrl = container.getAttribute("data-api-url");
+    if (!apiUrl) return;
+
+    try {
+      const res = await fetch(`${apiUrl}/api/custom-stats`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+
+      const onlineEl = container.querySelector(".stat-online");
+      const todayEl = container.querySelector(".stat-today");
+      const monthEl = container.querySelector(".stat-month");
+
+      if (onlineEl) onlineEl.textContent = formatNumber(data.online ?? 0);
+      if (todayEl) todayEl.textContent = formatNumber(data.today?.views ?? 0);
+      if (monthEl) monthEl.textContent = formatNumber(data.month?.views ?? 0);
+
+      // Fade in
+      container.classList.remove("opacity-0");
+      container.classList.add("opacity-100");
+    } catch (error) {
+      console.error("Failed to fetch Umami stats:", error);
+      // Still show the container but with error state
+      const onlineEl = container.querySelector(".stat-online");
+      const todayEl = container.querySelector(".stat-today");
+      const monthEl = container.querySelector(".stat-month");
+      if (onlineEl) onlineEl.textContent = "--";
+      if (todayEl) todayEl.textContent = "--";
+      if (monthEl) monthEl.textContent = "--";
+      container.classList.remove("opacity-0");
+      container.classList.add("opacity-100");
+    }
+  }
+
+  // Run on initial load
+  fetchUmamiStats();
+
+  // Support SPA navigation with Swup
+  document.addEventListener("astro:page-load", fetchUmamiStats);
+</script>

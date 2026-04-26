@@ -1,0 +1,60 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<div class="visitor-stats transition flex flex-wrap justify-center gap-4 text-50 text-sm text-center mb-4 opacity-0" id="visitor-stats-container">
+    <div class="flex items-center gap-1 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-lg border border-black/5 dark:border-white/10 backdrop-blur-md">
+        <Icon name="material-symbols:person-outline" class="text-[1.1rem] text-green-500" />
+        <span>当前在线: <span id="stat-online" class="font-bold text-[var(--primary)]">...</span></span>
+    </div>
+    <div class="flex items-center gap-1 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-lg border border-black/5 dark:border-white/10 backdrop-blur-md">
+        <Icon name="material-symbols:today-outline" class="text-[1.1rem] text-blue-500" />
+        <span>今日访问: <span id="stat-today" class="font-bold text-[var(--primary)]">...</span></span>
+    </div>
+    <div class="flex items-center gap-1 bg-black/5 dark:bg-white/10 px-3 py-1.5 rounded-lg border border-black/5 dark:border-white/10 backdrop-blur-md">
+        <Icon name="material-symbols:calendar-month-outline" class="text-[1.1rem] text-purple-500" />
+        <span>本月累计: <span id="stat-month" class="font-bold text-[var(--primary)]">...</span></span>
+    </div>
+</div>
+
+<script>
+    async function fetchStats() {
+        try {
+            const container = document.getElementById('visitor-stats-container');
+            // Change the URL to your custom proxy domain
+            const res = await fetch('https://moefun.yuia.fun/api/custom-stats');
+            
+            if (!res.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            const data = await res.json();
+            
+            const onlineEl = document.getElementById('stat-online');
+            const todayEl = document.getElementById('stat-today');
+            const monthEl = document.getElementById('stat-month');
+            
+            if (onlineEl) onlineEl.textContent = data.online || 0;
+            if (todayEl) todayEl.textContent = data.today?.views || 0;
+            if (monthEl) monthEl.textContent = data.month?.views || 0;
+
+            // Fade in the stats after data is loaded
+            if (container) {
+                container.classList.remove('opacity-0');
+                container.classList.add('opacity-100');
+            }
+        } catch (error) {
+            console.error('Failed to fetch visitor stats:', error);
+        }
+    }
+
+    // Run on init and when using swup (if applicable)
+    fetchStats();
+    if (window.swup) {
+        window.swup.hooks.on("page:view", fetchStats);
+    } else {
+        document.addEventListener("swup:enable", () => {
+            window.swup.hooks.on("page:view", fetchStats);
+        });
+    }
+</script>

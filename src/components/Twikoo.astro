@@ -1,0 +1,151 @@
+---
+---
+<link rel="stylesheet" href="/css/twikoo.css">
+<twikoo-comments class="block transition rounded-[var(--radius-large)] bg-[var(--card-bg)] p-6 md:p-10 mb-4 onload-animation">
+  <div id="tcomment"></div>
+</twikoo-comments>
+
+<script>
+  class TwikooComments extends HTMLElement {
+    connectedCallback() {
+      // Delay initialization to ensure the inner DOM (like #tcomment) is fully parsed
+      setTimeout(() => this.initTwikoo(), 0);
+    }
+
+    async initTwikoo() {
+      // @ts-ignore
+      if (typeof window.twikoo === 'undefined') {
+        try {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            // Using the local "nocss" version for better control and performance
+            script.src = '/js/twikoo.nocss.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        } catch (e) {
+          console.error("Failed to load Twikoo nocss script", e);
+          return;
+        }
+      }
+
+      // @ts-ignore
+      if (typeof window.twikoo !== 'undefined') {
+        // @ts-ignore
+        window.twikoo.init({
+          envId: 'https://yuia.netlify.app/.netlify/functions/twikoo',
+          el: this.querySelector('#tcomment'),
+        });
+      }
+    }
+  }
+
+  if (!customElements.get('twikoo-comments')) {
+    customElements.define('twikoo-comments', TwikooComments);
+  }
+</script>
+
+<style is:global>
+  /* Fix giant emoji and distorting avatar issues */
+  twikoo-comments img.tk-owo-emotion {
+    height: 1.5rem !important;
+    width: auto !important;
+    display: inline-block !important;
+    margin: 0 4px !important;
+    vertical-align: middle !important;
+  }
+  
+  /* Avatar Beautification */
+  .twikoo .tk-avatar {
+    @apply !mr-3 !mt-1;
+    width: 52px !important;
+    height: 52px !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    border-radius: 10px !important; /* Matching theme rounding */
+  }
+  .twikoo .tk-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    object-fit: cover !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+
+  /* Card-Style Comment Layout */
+  .twikoo .tk-comment {
+    @apply !mb-5 !p-4 md:!p-6 !rounded-2xl !transition-all !duration-300;
+    @apply bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 !important;
+  }
+  .twikoo .tk-comment:hover {
+    @apply !shadow-xl !-translate-y-1;
+    border-color: var(--primary) !important;
+  }
+
+  /* Comment Content Spacing */
+  .twikoo .tk-main {
+    @apply !flex-1;
+  }
+  .twikoo .tk-content {
+    @apply !mt-2 !leading-relaxed text-black/80 dark:text-white/80 !important;
+  }
+
+  /* Metadata & Badge Beautification */
+  .twikoo .tk-meta {
+    @apply !flex !items-center !gap-2 !mb-1;
+  }
+  .twikoo .tk-nick {
+    @apply !font-bold !text-[var(--primary)] !text-sm;
+  }
+  .twikoo .tk-tag {
+    @apply !bg-[var(--primary)] !text-white !px-1.5 !py-0.5 !rounded-md !text-[10px] !font-bold !shadow-sm !important;
+  }
+  .twikoo .tk-extra {
+    @apply !flex !flex-wrap !gap-1.5 !mt-1 !text-[10px] !text-black/40 dark:text-white/40;
+  }
+  .twikoo .tk-extra-item {
+    @apply !bg-black/5 dark:bg-white/10 !px-2 !py-0.5 !rounded-full !transition-colors;
+  }
+
+  /* Input Area Beautification */
+  .twikoo .tk-submit {
+    @apply !mb-8 !p-4 md:!p-6 !rounded-2xl !bg-black/5 dark:!bg-white/5 !border !border-dashed !border-black/10 dark:!border-white/10;
+  }
+  .twikoo .el-input__inner,
+  .twikoo .el-textarea__inner {
+    @apply bg-[var(--card-bg)] text-black/75 dark:text-white/75 border-black/10 dark:border-white/10 transition-colors shadow-none !important;
+  }
+  .twikoo .el-textarea__inner {
+    @apply !rounded-xl !p-3;
+  }
+  
+  /* Action Icons & Buttons */
+  .twikoo .tk-submit-action-icon,
+  .twikoo .tk-action-icon svg {
+    @apply fill-[var(--primary)] text-[var(--primary)] transition-all !important;
+  }
+  .twikoo .tk-action-icon:hover {
+    @apply transform scale-110 !important;
+  }
+
+  .twikoo .el-button--primary {
+    @apply bg-[var(--primary)] border-[var(--primary)] text-white shadow-none transition-all rounded-lg font-bold !important;
+  }
+  .twikoo .el-button--primary:hover {
+    @apply transform scale-105 opacity-90 !important;
+  }
+  
+  .twikoo .el-button:not(.el-button--primary) {
+    @apply text-black/75 dark:text-white/75 bg-transparent border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-lg !important;
+  }
+
+  /* Time & Extras */
+  .twikoo .tk-time {
+    @apply !text-[10px] !text-black/30 dark:!text-white/30;
+  }
+</style>

@@ -1,0 +1,84 @@
+---
+/**
+ * Reading Progress Bar
+ * 显示在页面顶部的阅读进度指示器，仅在文章页面显示
+ */
+---
+
+<div id="reading-progress-bar" class="reading-progress-container">
+  <div id="reading-progress-fill" class="reading-progress-fill"></div>
+</div>
+
+<style>
+  .reading-progress-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 9999;
+    background: transparent;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .reading-progress-container.visible {
+    opacity: 1;
+  }
+
+  .reading-progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 0 2px 2px 0;
+    background: linear-gradient(
+      90deg,
+      oklch(0.7 0.14 var(--hue)),
+      oklch(0.75 0.18 calc(var(--hue) + 30)),
+      oklch(0.7 0.14 calc(var(--hue) + 60))
+    );
+    transition: width 0.1s linear;
+    box-shadow: 0 0 8px oklch(0.7 0.14 var(--hue) / 0.4);
+  }
+</style>
+
+<script>
+  function initReadingProgress() {
+    const container = document.getElementById('reading-progress-bar');
+    const fill = document.getElementById('reading-progress-fill');
+    if (!container || !fill) return;
+
+    // 只在文章页面显示（检测 post-container）
+    const postContainer = document.getElementById('post-container');
+    if (!postContainer) {
+      container.classList.remove('visible');
+      return;
+    }
+
+    container.classList.add('visible');
+
+    function updateProgress() {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+      if (docHeight <= 0) {
+        fill!.style.width = '0%';
+        return;
+      }
+
+      const progress = Math.min(Math.max((scrollTop / docHeight) * 100, 0), 100);
+      fill!.style.width = progress + '%';
+    }
+
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+  }
+
+  // 初始化
+  initReadingProgress();
+
+  // Swup 页面切换时重新初始化
+  document.addEventListener('swup:contentReplaced', () => {
+    setTimeout(initReadingProgress, 100);
+  });
+</script>
