@@ -50,7 +50,7 @@ const jsonLd = {
 };
 
 // Resolve the post cover image URL for the share poster
-let resolvedPostImage;
+let resolvedPostImage: string | undefined;
 if (entry.data.image) {
     if (entry.data.image.startsWith('http') || entry.data.image.startsWith('//')) {
         // External URL — use directly
